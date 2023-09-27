@@ -10,10 +10,10 @@ from configparser import ConfigParser
 import re
 
 
-
-#btn = bouton
-#lsb = listbox
-#lab = label
+# definition des acronyme
+#btn : bouton
+#lsb : listbox
+#lab : label
 
 class App:
     def __init__(self, root):
@@ -127,7 +127,7 @@ class App:
         self.lab_file_info["font"] = ft
         self.lab_file_info["fg"] = "#333333"
         self.lab_file_info["justify"] = "left"
-        self.lab_file_info["text"] = "version 0.0.3"
+        self.lab_file_info["text"] = "version 0.0.4"
         self.lab_file_info.place(x=320,y=330,width=250,height=30)
 
         # self.lab_default_last_update=tk.Label(root)
@@ -152,6 +152,9 @@ class App:
         self.folder_selected = filedialog.askdirectory()
         # print(self.folder_selected)
         self.lab_app_path["text"]=self.folder_selected
+        
+        self.lsb_default.delete(0,END)
+        self.lsb_local.delete(0,END)
         # default_appconf_path=self.folder_selected+"/default/app.conf"
         # isExisting = os.path.exists(default_appconf_path)
         for root, dirs, files in os.walk(self.folder_selected + "/default/" ):
@@ -223,48 +226,54 @@ class App:
         self.stanzas[short]["stanza_list"]=[]
         reporter_output=""
         stanza_line=1
-        with open(path_default) as f:
-            line_number = 1
-            line = f.readline()
-
-            while line:
-                m = re.search(stanzas_regex,line)
-                
-                if m != None:
-                    print(m.group(0),"<======== MATCH")
-                    #print(m.group(1))
-                    #print(m)
-                    stanza_line = str(line_number)
-                    self.stanzas[short]["stanza_list"].append((path_default,line_number, m.group(1)))
-                    self.stanzas[short]["stanza_data"][stanza_line] = {}
-                    self.stanzas[short]["stanza_data"][stanza_line]["title"]= str(m.group(1))
-                    self.stanzas[short]["stanza_data"][stanza_line]["data"] = "["+str(m.group(1))+"]\n"
-                    #print(stanzas)
-                else:
-                    self.stanzas[short]["stanza_data"][stanza_line]["data"] += str(line)
+        if os.path.exists(path_default):
+            with open(path_default) as f:
+                line_number = 1
                 line = f.readline()
-                line_number += 1 
-        with open(path_local) as f:
-            line_number = 10000
-            line = f.readline()
 
-            while line:
-                m = re.search(stanzas_regex,line)
-                
-                if m != None:
-                    print(m.group(0),"<======== MATCH")
-                    #print(m.group(1))
-                    #print(m)
-                    stanza_line = str(line_number)
-                    self.stanzas[short]["stanza_list"].append((path_local,line_number, m.group(1)))
-                    self.stanzas[short]["stanza_data"][stanza_line] = {}
-                    self.stanzas[short]["stanza_data"][stanza_line]["title"]= str(m.group(1))
-                    self.stanzas[short]["stanza_data"][stanza_line]["data"] = "["+str(m.group(1))+"]\n"
-                    #print(stanzas)
-                else:
-                    self.stanzas[short]["stanza_data"][stanza_line]["data"] += str(line)
+                while line:
+                    m = re.search(stanzas_regex,line)
+                    
+                    if m != None:
+                        print(m.group(0),"<======== MATCH")
+                        #print(m.group(1))
+                        #print(m)
+                        stanza_line = str(line_number)
+                        self.stanzas[short]["stanza_list"].append((path_default,line_number, m.group(1)))
+                        self.stanzas[short]["stanza_data"][stanza_line] = {}
+                        self.stanzas[short]["stanza_data"][stanza_line]["title"]= str(m.group(1))
+                        self.stanzas[short]["stanza_data"][stanza_line]["data"] = "["+str(m.group(1))+"]\n"
+                        #print(stanzas)
+                    else:
+                        self.stanzas[short]["stanza_data"][stanza_line]["data"] += str(line)
+                    while '\n\n' in self.stanzas[short]["stanza_data"][stanza_line]["data"]:
+                        self.stanzas[short]["stanza_data"][stanza_line]["data"] = self.stanzas[short]["stanza_data"][stanza_line]["data"].replace("\n\n", "\n")
+                    line = f.readline()
+                    line_number += 1
+        if os.path.exists(path_local):
+            with open(path_local) as f:
+                line_number = 10000
                 line = f.readline()
-                line_number += 1 
+
+                while line:
+                    m = re.search(stanzas_regex,line)
+                    
+                    if m != None:
+                        print(m.group(0),"<======== MATCH")
+                        #print(m.group(1))
+                        #print(m)
+                        stanza_line = str(line_number)
+                        self.stanzas[short]["stanza_list"].append((path_local,line_number, m.group(1)))
+                        self.stanzas[short]["stanza_data"][stanza_line] = {}
+                        self.stanzas[short]["stanza_data"][stanza_line]["title"]= str(m.group(1))
+                        self.stanzas[short]["stanza_data"][stanza_line]["data"] = "["+str(m.group(1))+"]\n"
+                        #print(stanzas)
+                    else:
+                        self.stanzas[short]["stanza_data"][stanza_line]["data"] += str(line)
+                    while '\n\n' in self.stanzas[short]["stanza_data"][stanza_line]["data"]:
+                        self.stanzas[short]["stanza_data"][stanza_line]["data"] = self.stanzas[short]["stanza_data"][stanza_line]["data"].replace("\n\n", "\n")
+                    line = f.readline()
+                    line_number += 1 
         for fileref, line_num, match in self.stanzas[short]["stanza_list"]:
             # print("----")
             # print(fileref)
@@ -360,7 +369,7 @@ class App:
                     reporter_output += ("\n In line: {}.").format(lineno)
                     reporter_output += self.stanzas[short]["stanza_data"][str(lineno)]["data"]
         if reporter_output == "":
-            showinfo(title="Verification de fichier", message="fichier " + file + " ne contient pas d'item en double")
+            showinfo(title="Verification de fichier", message="fichier " + file + " ne contient pas d'item en double",parent=root)
         else:
             # showwarning(title="Verification de fichier", message="fichier " + file + "contient des items en doublons\n"+reporter_output)
             self.create_window_double_mgmt()
@@ -376,7 +385,7 @@ class App:
         height=428
         screenwidth = self.mgmt_window.winfo_screenwidth()
         screenheight = self.mgmt_window.winfo_screenheight()
-        alignstr = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
+        alignstr = '%dx%d+%d+%d' % (width, height, ((screenwidth - width) / 2) + 50, ((screenheight - height) / 2) + 50)
         self.mgmt_window.geometry(alignstr)
         self.mgmt_window.resizable(width=False, height=False)
 
@@ -429,20 +438,58 @@ class App:
         self.btn_export_and_close["text"] = "Export and close"
         self.btn_export_and_close.place(x=400,y=385,width=140,height=30)
         self.btn_export_and_close["command"] = self.btn_export_and_close_command
-        print("_______________________________________")
-        print(self.stanzas[self.current_stanza]["stanza_found"])
+        
+        
+        self.lab_mgmt_info=tk.Label(self.mgmt_window)
+        ft = tkFont.Font(family='Times',size=10)
+        self.lab_mgmt_info["font"] = ft
+        self.lab_mgmt_info["fg"] = "#333333"
+        self.lab_mgmt_info["justify"] = "left"
+        self.lab_mgmt_info["text"] = ""
+        self.lab_mgmt_info.place(x=400,y=285,width=140,height=100)
+        nb_del = 0
+        # verification des stanza identique
         for key, linenos in self.stanzas[self.current_stanza]["stanza_found"].items():
             print(key)
             print(linenos)
             if len(linenos) > 1:
-                self.lsb_mgmt.insert(0,key)
+                temp_val=[]
+                temp_key=[]
+                for num in linenos:
+                    val = self.stanzas[self.current_stanza]["stanza_data"][str(num)]["data"]
+                    print(val)
+                    if val not in temp_val:
+                        temp_val.append(val)
+                        temp_key.append(num)
+                    else:
+                        nb_del +=1
+                print("##############")
+                print(temp_val)
+                print(temp_key)
+                self.stanzas[self.current_stanza]["stanza_found"][key]=temp_key
+                print(self.stanzas[self.current_stanza]["stanza_found"][key])
+        #insertion des stanza differents pour traitement
+        for key, linenos in self.stanzas[self.current_stanza]["stanza_found"].items():
+            # print(key)
+            # print(linenos)
+            if len(linenos) > 1:
+                self.lsb_mgmt.insert(0,key + ": x" + str(len(linenos)))
+        # mettre la fentere au premier plan
+        self.mgmt_window.attributes('-topmost',True)
+        # mettre la fenetre devant la fenetre root
+        # self.mgmt_window.lift(root)
+        # root.lower(self.mgmt_window)
+        if nb_del>0:
+            showinfo(title="Stanza identique", message="il y " + str(nb_del) + " stanza identique n'entrant pas en conflit non affiché",parent=self.mgmt_window)
         lastindex=self.lsb_mgmt.index("end")
         print("___lastindex___")
         print(lastindex)
         if lastindex > 0:
             self.btn_export_and_close["state"] = "disabled"
+            self.lab_mgmt_info["text"] = "Il y a encore\n" + str(lastindex) + " stanza\nen conflits\nvous ne pouvez pas\nencore exporter le\nfichier"
         else:
             self.btn_export_and_close["state"] = "normal"
+            self.lab_mgmt_info["text"] = "Il n'y a plus\nde conflit vous\npouvez exporter le\nfichier"
 
 
 
@@ -464,7 +511,7 @@ class App:
     def btn_select_one_item_command(self):
         values=self.get_mgmt_focus_values()
         print(values)
-        self.current_selected_stanza_item = values["selected_stanza"]
+        self.current_selected_stanza_item = values["selected_stanza"].split(":")[0]
         self.create_window_double_selection()
         self.mgmt_window.destroy()
        
@@ -610,7 +657,6 @@ class App:
         self.GLabel_361["justify"] = "center"
         self.GLabel_361["text"] = "label"
         self.GLabel_361.place(x=680,y=10,width=70,height=25)
-        
         self.lsb_first_double.insert(END,self.stanzas[self.current_stanza]["stanza_data"][str(self.stanzas[self.current_stanza]["stanza_found"][self.current_selected_stanza_item][0])]["data"])
         self.lsb_second_double.insert(END,self.stanzas[self.current_stanza]["stanza_data"][str(self.stanzas[self.current_stanza]["stanza_found"][self.current_selected_stanza_item][1])]["data"])
 
