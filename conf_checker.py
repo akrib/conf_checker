@@ -162,9 +162,19 @@ class App:
                 if file.endswith('.conf'):
                     print(os.path.join(root, file))
                     self.lsb_default.insert(0,file)
+        for root, dirs, files in os.walk(self.folder_selected + "/metadata/" ):
+            for file in files:
+                if file.endswith('default.meta'):
+                    print(os.path.join(root, file))
+                    self.lsb_default.insert(0,file)
         for root, dirs, files in os.walk(self.folder_selected + "/local/" ):
             for file in files:
                 if file.endswith('.conf'):
+                    print(os.path.join(root, file))
+                    self.lsb_local.insert(0,file)
+        for root, dirs, files in os.walk(self.folder_selected + "/metadata/" ):
+            for file in files:
+                if file.endswith('local.meta'):
                     print(os.path.join(root, file))
                     self.lsb_local.insert(0,file)
 
@@ -174,12 +184,14 @@ class App:
         val["selected_listbox"]=str(root.focus_get())
         if val["selected_listbox"] == ".!listbox":
             val["dir"]="/default/"
-            
             val["new_dir"]="/default_"+self.date_str+"/"
             for i in self.lsb_default.curselection():
                 #print(self.lsb_default.get(i))
                 val["selected_file"]=self.lsb_default.get(i)
                 val["short_name"] = "default_" + val["selected_file"]
+                if val["selected_file"] == "default.meta" : 
+                    val["dir"]="/metadata/"
+                    val["short_name"] = "metadata_" + val["selected_file"]
 
         elif val["selected_listbox"]  == ".!listbox2":
             val["dir"]="/local/"
@@ -188,6 +200,9 @@ class App:
                 #print(self.lsb_local.get(i))
                 val["selected_file"]=self.lsb_local.get(i)
                 val["short_name"] = "local_" + val["selected_file"]
+                if val["selected_file"] == "local.meta" : 
+                    val["dir"]="/metadata/"
+                    val["short_name"] = "metadata_" + val["selected_file"]
         else:
             val["dir"]=None
             val["new_dir"]=None
@@ -217,7 +232,12 @@ class App:
         
     def check_validate_merge_stanzas(self,path_default,path_local,file):
         stanzas_regex = r"^\[([^\[\]]*)\]"
-        short = "default_"+file
+        if file == "default.meta" or file == "local.meta" :
+            path_default=self.folder_selected+"/metadata/default.meta"
+            path_local=self.folder_selected+"/metadata/local.meta"
+            short = "metadata_"+file
+        else:
+            short = "default_"+file
         self.current_stanza=short
         self.stanzas={}
         self.stanzas[short]={}
@@ -291,6 +311,7 @@ class App:
                     reporter_output += self.stanzas[short]["stanza_data"][str(lineno)]["data"]
         if reporter_output == "":
             showinfo(title="Verification de fichier", message="fichier " + file + " ne contient pas d'item en double")
+            self.create_window_double_mgmt()
         else:
             # showwarning(title="Verification de fichier", message="fichier " + file + "contient des items en doublons\n"+reporter_output)
             self.create_window_double_mgmt()
